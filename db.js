@@ -16,7 +16,8 @@ async function connectToDB() {
       const nextId = await User.getNextId();
 
       const defaultAdminUser = new User({
-        id: nextId,
+        userId: nextId,
+        name: "admin",
         email: "admin@admin.com",
         password: "Admin@123",
         isAdmin: true,

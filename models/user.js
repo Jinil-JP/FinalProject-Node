@@ -1,9 +1,13 @@
 const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema({
-  _id: {
+  userId: {
     type: Number,
     unique: true,
+    required: true,
+  },
+  name: {
+    type: String,
     required: true,
   },
   email: {
@@ -26,8 +30,8 @@ const userSchema = new mongoose.Schema({
 
 userSchema.statics.getNextId = async function () {
   try {
-    const lastUser = await this.findOne({}, { _id: 1 }).sort({ _id: -1 });
-    return lastUser ? lastUser._id + 1 : 1;
+    const lastUser = await this.findOne({}, { userId: 1 }).sort({ userId: -1 });
+    return lastUser ? lastUser.userId + 1 : 1;
   } catch (error) {
     console.error("Error getting next ID:", error.message);
     throw error; // Rethrow the error to handle it in the caller function
