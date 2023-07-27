@@ -48,7 +48,6 @@ app.post("/login", async (req, res) => {
     }
 
     if (user.password !== password) {
-      console.log("Coming");
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
@@ -84,9 +83,7 @@ app.post("/delete_member", async (req, res) => {
   try {
     const memberId = req.body.id;
 
-    console.log(memberId);
     const member = await User.findOne({ userId: memberId });
-    console.log(member);
     if (!member) {
       return res.status(404).json({ message: "Member not found" });
     }
@@ -101,7 +98,6 @@ app.post("/delete_member", async (req, res) => {
 
 // Create a new task
 app.post("/create_task", async (req, res) => {
-  console.log(req.body);
   try {
     const {
       name,
@@ -131,9 +127,6 @@ app.post("/create_task", async (req, res) => {
       hoursWorked: 0,
       selectedMemberId: selectedMemberId,
     });
-
-    console.log("newTask");
-    console.log(newTask);
 
     const savedTask = await newTask.save();
 
@@ -180,7 +173,6 @@ app.post("/tasks", async (req, res) => {
       })
     );
 
-    console.log(tasksWithSelectedMember);
     res.status(200).json(tasksWithSelectedMember);
   } catch (error) {
     console.error("Error getting tasks:", error.message);
