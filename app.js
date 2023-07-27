@@ -88,6 +88,8 @@ app.post("/delete_member", async (req, res) => {
       return res.status(404).json({ message: "Member not found" });
     }
 
+    await Task.deleteMany({ selectedMemberId: memberId });
+
     await User.deleteOne({ userId: memberId });
     res.status(200).json({ message: "Member deleted successfully" });
   } catch (error) {
@@ -177,6 +179,19 @@ app.post("/tasks", async (req, res) => {
   } catch (error) {
     console.error("Error getting tasks:", error.message);
     res.status(500).json({ error: "Error getting tasks" });
+  }
+});
+
+// Delete a task
+app.post("/delete_task", async (req, res) => {
+  try {
+    const taskId = req.body.id;
+
+    await Task.deleteOne({ taskId: taskId });
+    res.status(200).json({ message: "Task deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting task:", error.message);
+    res.status(500).json({ error: "Error deleting task" });
   }
 });
 
