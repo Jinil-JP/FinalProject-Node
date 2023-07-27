@@ -4,7 +4,6 @@ const bodyParser = require("body-parser");
 const dbConnection = require("./db");
 const User = require("./models/user");
 const Task = require("./models/task");
-const router = express.Router();
 
 const app = express();
 
@@ -85,7 +84,9 @@ app.post("/delete_member", async (req, res) => {
   try {
     const memberId = req.body.id;
 
+    console.log(memberId);
     const member = await User.findOne({ userId: memberId });
+    console.log(member);
     if (!member) {
       return res.status(404).json({ message: "Member not found" });
     }
@@ -100,17 +101,18 @@ app.post("/delete_member", async (req, res) => {
 
 // Create a new task
 app.post("/create_task", async (req, res) => {
+  console.log(req.body);
   try {
     const {
-      taskName,
-      taskDescription,
-      taskStartDate,
-      taskEndDate,
+      name,
+      description,
+      startDate,
+      endDate,
       isPrerequisite,
       selectedMemberId,
     } = req.body;
 
-    const selectedMember = await User.findById(selectedMemberId);
+    const selectedMember = await User.findOne({ userId: selectedMemberId });
     if (!selectedMember) {
       return res.status(400).json({ error: "Invalid selectedMemberId" });
     }
@@ -118,14 +120,20 @@ app.post("/create_task", async (req, res) => {
     const taskId = await Task.getNextId();
 
     const newTask = new Task({
-      taskId,
-      taskName,
-      taskDescription,
-      taskStartDate,
-      taskEndDate,
-      isPrerequisite,
+      taskId: taskId,
+      name: name,
+      description: description,
+      startDate: startDate,
+      endDate: endDate,
+      isStarted: false,
+      isCompleted: false,
+      isPrerequisite: isPrerequisite,
+      hoursWorked: 0,
       selectedMemberId: selectedMemberId,
     });
+
+    console.log("newTask");
+    console.log(newTask);
 
     const savedTask = await newTask.save();
 
@@ -137,14 +145,28 @@ app.post("/create_task", async (req, res) => {
 });
 
 //tasks
-app.get("/tasks", async (req, res) => {
+app.post("/tasks", async (req, res) => {
   try {
-    const tasks = await Task.find();
+    const userID = req.body.currentUserId;
+
+    const user = await User.findOne({ userId: userID });
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    let tasks;
+
+    if (user.isAdmin) {
+      tasks = await Task.find();
+    } else {
+      tasks = await Task.find({ selectedMemberId: userID });
+    }
 
     const tasksWithSelectedMember = await Promise.all(
       tasks.map(async (task) => {
-        const selectedMemberId = task.selectedMemberId;
-        const selectedMember = await User.findById(selectedMemberId);
+        const selectedMember = await User.findOne({
+          userId: task.selectedMemberId,
+        });
         if (!selectedMember) {
           return {
             ...task.toObject(),
@@ -158,6 +180,7 @@ app.get("/tasks", async (req, res) => {
       })
     );
 
+    console.log(tasksWithSelectedMember);
     res.status(200).json(tasksWithSelectedMember);
   } catch (error) {
     console.error("Error getting tasks:", error.message);

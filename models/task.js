@@ -6,21 +6,25 @@ const taskSchema = new mongoose.Schema({
     unique: true,
     required: true,
   },
-  taskName: {
+  name: {
     type: String,
     required: true,
   },
-  taskDescription: {
+  description: {
     type: String,
     required: true,
   },
-  taskStartDate: {
+  startDate: {
     type: Date,
     required: true,
   },
-  taskEndDate: {
+  endDate: {
     type: Date,
     required: true,
+  },
+  isStarted: {
+    type: Boolean,
+    default: false,
   },
   isCompleted: {
     type: Boolean,
@@ -35,8 +39,16 @@ const taskSchema = new mongoose.Schema({
     default: 0,
   },
   selectedMemberId: {
-    type: String,
+    type: Number,
     required: true,
+  },
+  taskStartTime: {
+    type: Date,
+    required: false,
+  },
+  taskEndTime: {
+    type: Date,
+    required: false,
   },
   createdAt: {
     type: Date,
