@@ -54,6 +54,10 @@ const taskSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  cost: {
+    type: Number,
+    default: 0,
+  },
   updatedAt: {
     type: Date,
     default: null,

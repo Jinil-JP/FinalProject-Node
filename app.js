@@ -182,6 +182,104 @@ app.post("/tasks", async (req, res) => {
   }
 });
 
+//Start task
+app.post("/start_task", async (req, res) => {
+  try {
+    const { taskId } = req.body;
+
+    const task = await Task.findOne({ taskId: taskId });
+    if (!task) {
+      return res.status(400).json({ error: "Invalid taskId" });
+    }
+
+    if (task.isStarted) {
+      return res.status(400).json({ error: "Task is already started" });
+    }
+
+    const prerequisiteTasks = await Task.find({
+      selectedMemberId: task.selectedMemberId,
+      isPrerequisite: true,
+      isCompleted: false,
+      isStarted: true,
+    });
+
+    if (prerequisiteTasks.length > 0) {
+      return res.status(400).json({
+        error:
+          "You cannot start this prerequisite task as there are pending tasks.",
+      });
+    }
+
+    task.isStarted = true;
+    task.taskStartTime = new Date();
+
+    await task.save();
+
+    res.status(200).json({ message: "Task started successfully" });
+  } catch (error) {
+    console.error("Error starting task:", error.message);
+    res.status(500).json({ error: "Error starting task" });
+  }
+});
+
+//Complete task
+app.post("/complete_task", async (req, res) => {
+  try {
+    const { taskId, currentUserId } = req.body;
+
+    const task = await Task.findOne({ taskId: taskId });
+    if (!task) {
+      return res.status(400).json({ error: "Invalid taskId" });
+    }
+
+    const currentUser = await User.findOne({ userId: currentUserId });
+
+    const selectedMember = await User.findOne({
+      userId: task.selectedMemberId,
+    });
+
+    if (!selectedMember) {
+      return res.status(400).json({ error: "Invalid selectedMemberId" });
+    }
+
+    if (currentUser.isAdmin) {
+      task.isStarted = true;
+      task.taskStartTime = new Date();
+    }
+
+    if (!task.isStarted) {
+      return res.status(400).json({ error: "Task is not yet started" });
+    }
+
+    if (task.isCompleted) {
+      return res.status(400).json({ error: "Task is already completed" });
+    }
+
+    task.isCompleted = true;
+    task.taskEndTime = new Date(); // Record the time of task completion
+
+    // Calculate the hours worked by subtracting the task start time from the completion time
+    const startTime = task.taskStartTime.getTime();
+    const endTime = task.taskEndTime.getTime();
+    const hoursWorked = (endTime - startTime) / (1000 * 60 * 60); // Convert milliseconds to hours
+    task.hoursWorked = hoursWorked;
+
+    const hourlyRate = selectedMember.hourlyRate;
+    const totalCost = (hoursWorked * hourlyRate).toFixed(2);
+
+    task.cost = totalCost;
+
+    await task.save();
+
+    res
+      .status(200)
+      .json({ message: "Task completed successfully", hoursWorked, totalCost });
+  } catch (error) {
+    console.error("Error completing task:", error.message);
+    res.status(500).json({ error: "Error completing task" });
+  }
+});
+
 // Delete a task
 app.post("/delete_task", async (req, res) => {
   try {
