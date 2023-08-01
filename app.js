@@ -20,7 +20,7 @@ app.post("/create_user", async (req, res) => {
     const user = new User({
       userId: nextId,
       name,
-      email,
+      email: email.toLowerCase(),
       password,
       isAdmin,
       hourlyRate,
